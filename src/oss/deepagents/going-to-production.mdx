@@ -743,14 +743,14 @@ class SandboxSyncMiddleware(AgentMiddleware):
             name = _safe_filename(item.key)
             files.append((f"/memories/{name}", item.value["content"].encode()))
         if files:
-            await self.backend.upload_files(files)
+            await self.backend.aupload_files(files)
 
     async def aafter_agent(self, state: AgentState, runtime: Runtime) -> None:
         """Sync updated memories back to the store."""
         user_id = runtime.server_info.user.identity  # [!code highlight]
         store = runtime.store
         items = await store.asearch(("memories", user_id))
-        results = await self.backend.download_files(
+        results = await self.backend.adownload_files(
             [f"/memories/{item.key}" for item in items]
         )
         for result in results:
@@ -770,11 +770,9 @@ backend = CompositeBackend(
     default=LangSmithSandbox(sandbox=ls_sandbox),
     routes={
         "/skills/": StoreBackend(
-            rt,
             namespace=lambda rt: ("skills", rt.server_info.user.identity),  # [!code highlight]
         ),
         "/memories/": StoreBackend(
-            rt,
             namespace=lambda rt: ("memories", rt.server_info.user.identity),  # [!code highlight]
         ),
     },
